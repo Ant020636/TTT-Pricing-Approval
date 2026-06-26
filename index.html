@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>TTT Pricing Bot — None PL Price Approval</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #eef2f7; color: #1a202c; min-height: 100vh; }
+
+/* Header */
+header {
+  background: linear-gradient(135deg, #1a365d, #2b6cb0);
+  color: white; padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  position: sticky; top: 0; z-index: 100;
+  flex-wrap: wrap;
+}
+.logo {
+  font-weight: 900; font-size: 22px; background: #fff; color: #1a365d;
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.hdr-text h1 { font-size: 15px; font-weight: 700; }
+.hdr-text p  { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+.hdr-btns { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Buttons */
+button {
+  padding: 8px 14px; border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-primary { background: #3182ce; color: #fff; }
+.btn-primary:hover { background: #2b6cb0; }
+.btn-success { background: #38a169; color: #fff; }
+.btn-success:hover { background: #276749; }
+.btn-save { background: #805ad5; color: #fff; }
+.btn-save:hover { background: #6b46c1; }
+.btn-line { background: #06C755; color: #fff; }
+.btn-line:hover { background: #05a847; }
+.btn-outline { background: #fff; color: #4a5568; border: 1.5px solid #e2e8f0; }
+.btn-outline:hover { background: #f7fafc; }
+.btn-ghost { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); font-size: 12px; padding: 6px 12px; }
+.btn-ghost:hover { background: rgba(255,255,255,0.25); }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn-icon { padding: 5px 10px; font-size: 14px; background: #e53e3e; color: #fff; border-radius: 6px; line-height: 1; }
+.btn-icon:hover { background: #c53030; }
+.btn-full { width: 100%; justify-content: center; }
+
+/* Layout */
+.main { padding: 16px; display: grid; grid-template-columns: 320px 1fr; gap: 16px; align-items: start; }
+@media(max-width: 900px) { .main { grid-template-columns: 1fr; } }
+
+/* Cards */
+.card {
+  background: white; border-radius: 14px; padding: 18px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+.card-title {
+  font-size: 12px; font-weight: 700; color: #2b6cb0;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 14px; padding-bottom: 10px;
+  border-bottom: 2px solid #ebf4ff;
+  display: flex; align-items: center; gap: 7px;
+}
+
+/* Form */
+.form-group { margin-bottom: 11px; }
+label {
+  display: block; font-size: 11px; font-weight: 600; color: #718096;
+  margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+input[type="text"], input[type="number"], select, textarea {
+  width: 100%; padding: 9px 10px;
+  border: 1.5px solid #e2e8f0; border-radius: 7px;
+  font-size: 13px; color: #1a202c; background: #f8fafc;
+  outline: none; transition: border-color 0.2s;
+  font-family: inherit;
+}
+input:focus, select:focus, textarea:focus { border-color: #4299e1; background: #fff; }
+.hint { font-size: 10px; color: #a0aec0; margin-top: 3px; }
+.divider {
+  border-top: 2px dashed #fed7aa; margin: 14px 0 12px;
+  padding-top: 12px; font-size: 11px; font-weight: 700;
+  color: #c05621; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Requester section */
+.requester-card {
+  background: linear-gradient(135deg, #fff8f0, #fff);
+  border: 1.5px solid #fbd38d;
+  border-radius: 14px; padding: 16px;
+  margin-bottom: 16px;
+}
+.requester-card .card-title { color: #c05621; border-bottom-color: #fbd38d; }
+
+/* Products table */
+.products-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.products-table th {
+  background: #2b6cb0; color: white; padding: 9px 10px;
+  text-align: left; font-weight: 600; font-size: 12px;
+}
+.products-table td { padding: 6px 7px; border-bottom: 1px solid #edf2f7; vertical-align: middle; }
+.products-table tr:last-child td { border-bottom: none; }
+.products-table tr:hover td { background: #f7fafc; }
+.products-table input[type="text"],
+.products-table input[type="number"] {
+  padding: 6px 8px; font-size: 13px; background: #f8fafc; width: 100%;
+}
+.row-num {
+  font-size: 11px; font-weight: 700; color: #fff;
+  background: #718096; border-radius: 20px; padding: 2px 8px;
+  white-space: nowrap;
+}
+.add-row-btn { margin-top: 10px; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Result table */
+table.compare { width: 100%; border-collapse: collapse; font-size: 13px; background: white; }
+table.compare th {
+  background: #2b6cb0; color: white; padding: 9px 12px;
+  text-align: center; font-weight: 700; white-space: nowrap; font-size: 12px;
+}
+table.compare th.row-header { background: #1a365d; text-align: left; min-width: 180px; }
+table.compare td { padding: 7px 12px; border-bottom: 1px solid #edf2f7; text-align: right; white-space: nowrap; }
+table.compare td.row-label { text-align: left; font-weight: 600; color: #4a5568; font-size: 12px; background: #f7fafc; }
+table.compare tr.sec-row td { background: #dbeafe; font-weight: 700; color: #1e40af; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 12px; }
+table.compare tr.hl td { background: #f0fff4; font-weight: 700; }
+table.compare tr.final td { background: #e6fffa; font-weight: 800; font-size: 14px; color: #276749; }
+table.compare tr.cost td { background: #fffaf0; }
+table.compare tr.profit td { font-weight: 800; font-size: 14px; }
+table.compare tr.profit td.pos { color: #276749; background: #f0fff4; }
+table.compare tr.profit td.neg { color: #c53030; background: #fff5f5; }
+table.compare tr.profit td.row-label { background: #f7fafc; color: #4a5568; font-size: 12px; }
+
+.bar-wrap { display: flex; align-items: center; gap: 5px; justify-content: flex-end; }
+.mini-bar { width: 50px; height: 6px; background: #e2e8f0; border-radius: 4px; overflow: hidden; display: inline-block; }
+.mini-fill { height: 100%; border-radius: 4px; }
+
+/* Action bar */
+.action-bar {
+  background: white; border-radius: 14px; padding: 14px 18px;
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+.action-bar .ts { font-size: 11px; color: #a0aec0; margin-left: auto; }
+
+.empty-msg { text-align: center; padding: 36px; color: #a0aec0; font-size: 14px; }
+
+/* Save status */
+.save-status {
+  padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  display: none; align-items: center; gap: 8px;
+}
+.save-status.success { background: #c6f6d5; color: #22543d; display: flex; }
+.save-status.error { background: #fed7d7; color: #742a2a; display: flex; }
+.save-status.loading { background: #bee3f8; color: #2c5282; display: flex; }
+
+/* Mobile optimizations */
+@media(max-width: 600px) {
+  header { padding: 10px 14px; }
+  .hdr-btns { gap: 4px; }
+  .btn-ghost { font-size: 11px; padding: 5px 9px; }
+  .main { padding: 12px; gap: 12px; }
+  .card { padding: 14px; border-radius: 10px; }
+  button { font-size: 12px; padding: 8px 11px; }
+  .action-bar { padding: 12px; }
+  table.compare th, table.compare td { padding: 7px 8px; font-size: 12px; }
+  .requester-card { padding: 14px; }
+}
+
+/* Cost grid */
+.cost-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Right panel */
+.right-panel { display: flex; flex-direction: column; gap: 16px; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+  background: #1a365d; color: white; padding: 12px 20px;
+  border-radius: 10px; font-size: 13px; font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transform: translateY(100px); opacity: 0;
+  transition: all 0.3s ease;
+  max-width: 320px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: #276749; }
+.toast.error { background: #c53030; }
+</style>
+</head>
+<body>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<header>
+  <div class="logo">T</div>
+  <div class="hdr-text">
+    <h1>TTT Pricing Bot — None PL Price Approval</h1>
+    <p>TTT Corporation Co., Ltd. | คำนวณราคาขาย + Net Profit Margin</p>
+  </div>
+  <div class="hdr-btns">
+    <button class="btn-ghost" onclick="exportExcel()">📥 Excel</button>
+    <button class="btn-ghost" onclick="printApproval()">🖨️ ใบอนุมัติ</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- LEFT: Global Settings -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- Requester Info -->
+    <div class="card requester-card">
+      <div class="card-title">👤 ข้อมูลผู้ขอราคา</div>
+
+      <div class="form-group">
+        <label>ชื่อผู้ขอราคา</label>
+        <input type="text" id="req_name" placeholder="เช่น สมชาย ใจดี" oninput="calc()">
+      </div>
+
+      <div class="form-group">
+        <label>แผนก</label>
+        <select id="req_dept" onchange="calc()">
+          <option value="">-- เลือกแผนก --</option>
+          <option value="SALE">SALE</option>
+          <option value="RM">RM</option>
+          <option value="ONLINE">ONLINE</option>
+          <option value="HC">HC</option>
+          <option value="SALE TT">SALE TT</option>
+          <option value="C-Level">C-Level</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>แบรนด์สินค้าที่เสนอราคา</label>
+        <select id="req_brand" onchange="toggleBrandOther();calc()">
+          <option value="">-- เลือกแบรนด์ --</option>
+          <option value="PISCO">PISCO</option>
+          <option value="MTG">MTG</option>
+          <option value="CONTINENTAL">CONTINENTAL</option>
+          <option value="NORRES">NORRES</option>
+          <option value="TOYONAKA">TOYONAKA</option>
+          <option value="OTHER">OTHER (ระบุเอง)</option>
+        </select>
+      </div>
+      <div class="form-group" id="brand_other_group" style="display:none">
+        <label>ระบุชื่อแบรนด์</label>
+        <input type="text" id="req_brand_other" placeholder="พิมพ์ชื่อแบรนด์" oninput="calc()">
+      </div>
+      <div class="form-group">
+        <label>ลูกค้า / โปรเจกต์ (ถ้ามี)</label>
+        <input type="text" id="req_customer" placeholder="เช่น บริษัท ABC จำกัด" oninput="calc()">
+      </div>
+    </div>
+
+    <!-- Conditions -->
+    <div class="card">
+      <div class="card-title">⚙️ เงื่อนไขราคา (ใช้กับทุกสินค้า)</div>
+
+      <div class="form-group">
+        <label>สกุลเงิน</label>
+        <select id="g_currency" onchange="calc()">
+          <option value="">-- เลือกสกุลเงิน --</option>
+          <option value="USD">USD (35 ฿)</option>
+          <option value="JPY">JPY (0.25 ฿)</option>
+          <option value="RMB">RMB (5 ฿)</option>
+          <option value="THB">THB (1 ฿)</option>
+          <option value="EURO">EURO (40 ฿)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Price Term</label>
+        <select id="g_term" onchange="calc()">
+          <option value="">-- เลือก Term --</option>
+          <optgroup label="LCL">
+            <option value="LCL_Local">LCL Local (0%)</option>
+            <option value="LCL_DDU">LCL DDU (5%)</option>
+            <option value="LCL_CIF_China">LCL CIF China (25%)</option>
+            <option value="LCL_CIF_Bangkok">LCL CIF Bangkok (15%)</option>
+            <option value="LCL_EXW">LCL EXW (30%)</option>
+            <option value="LCL_FOB">LCL FOB (25%)</option>
+            <option value="LCL_Air_50">LCL Air 50% (50%)</option>
+            <option value="LCL_Air_70">LCL Air 70% (70%)</option>
+            <option value="LCL_Air_100">LCL Air 100% (100%)</option>
+          </optgroup>
+          <optgroup label="FCL">
+            <option value="FCL_Local">FCL Local (0%)</option>
+            <option value="FCL_DDU">FCL DDU (3%)</option>
+            <option value="FCL_CIF_China">FCL CIF China (10%)</option>
+            <option value="FCL_CIF_Bangkok">FCL CIF Bangkok (5%)</option>
+            <option value="FCL_EXW">FCL EXW (15%)</option>
+            <option value="FCL_FOB">FCL FOB (8%)</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Import Tax</label>
+        <select id="g_tax" onchange="calc()">
+          <option value="">-- เลือกภาษีนำเข้า --</option>
+          <option value="0">0% with Form E / JTEPA</option>
+          <option value="0.05">5% General without Form E</option>
+          <option value="0.10">10% Special without Form E</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Margin Category</label>
+        <select id="g_marginCat" onchange="calc()">
+          <option value="">-- เลือก Category --</option>
+          <option value="0.25">สินค้าอุตสาหกรรม แข่งขันสูง (20-30%)</option>
+          <option value="0.375">สินค้าอุตสาหกรรม Sole Agent (35-40%)</option>
+          <option value="0.25">สินค้าทั่วไป แข่งขันสูง (20-30%)</option>
+          <option value="0.375">สินค้าทั่วไป มีจุดขาย (35-40%)</option>
+          <option value="0.20">สินค้าเกษตร แข่งขันสูง (20%)</option>
+          <option value="0.30">สินค้าเกษตร มีจุดขาย (30%)</option>
+          <option value="0.20">สินค้า Garden แข่งขันสูง (20%)</option>
+          <option value="0.30">สินค้า Garden มีจุดขาย (30%)</option>
+          <option value="0.25">สินค้า Non Hose แข่งขันสูง (20-30%)</option>
+          <option value="0.35">สินค้า Non Hose มีจุดขาย (35%)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Margin % Override (0–1)</label>
+        <input type="number" id="g_marginOv" placeholder="เช่น 0.30" step="0.01" min="0" max="1" oninput="calc()">
+        <div class="hint">* ถ้าใส่ค่านี้จะใช้แทน Category ด้านบน</div>
+      </div>
+
+      <div class="row2">
+        <div class="form-group">
+          <label>Rebate</label>
+          <select id="g_rebate" onchange="calc()">
+            <option value="0">ไม่มี (0%)</option>
+            <option value="0.13">มีรีเบท 13%</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>GM Discount</label>
+          <select id="g_gm" onchange="calc()">
+            <option value="">--</option>
+            <option value="0.31">31%</option>
+            <option value="0.40">40%</option>
+            <option value="0.50">50%</option>
+            <option value="0.60">60%</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="divider">💰 ค่าใช้จ่าย (กรอกเป็นจำนวนเงิน ฿)</div>
+
+      <div class="cost-grid">
+        <div class="form-group">
+          <label>Advertise (฿)</label>
+          <input type="number" id="g_adv" value="0" step="1" min="0" oninput="calc()">
+        </div>
+        <div class="form-group">
+          <label>Presentor (฿)</label>
+          <input type="number" id="g_pre" value="0" step="1" min="0" oninput="calc()">
+        </div>
+        <div class="form-group">
+          <label>Promotion (฿)</label>
+          <input type="number" id="g_pro" value="0" step="1" min="0" oninput="calc()">
+        </div>
+        <div class="form-group">
+          <label>WH-Transport (฿)</label>
+          <input type="number" id="g_wh" value="0" step="1" min="0" oninput="calc()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Sale &amp; Admin (฿)</label>
+        <input type="number" id="g_sa" value="0" step="1" min="0" oninput="calc()">
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Products + Results -->
+  <div class="right-panel">
+
+    <!-- Products list -->
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between">
+        <span>📦 รายการสินค้า</span>
+        <button class="btn-primary btn-sm" onclick="addRow()">＋ เพิ่มสินค้า</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="products-table" id="prodTable">
+          <thead>
+            <tr>
+              <th style="width:55px">#</th>
+              <th>Item Code</th>
+              <th>ราคาต่างประเทศ</th>
+              <th style="width:40px"></th>
+            </tr>
+          </thead>
+          <tbody id="prodBody"></tbody>
+        </table>
+      </div>
+      <button class="btn-outline btn-sm add-row-btn" onclick="addRow()">＋ เพิ่มสินค้า</button>
+    </div>
+
+    <!-- Results -->
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div style="padding:14px 18px 12px; border-bottom: 2px solid #ebf4ff;">
+        <div class="card-title" style="margin-bottom:0">📊 ผลการคำนวณเปรียบเทียบ</div>
+      </div>
+      <div class="table-wrap" id="resultWrap">
+        <div class="empty-msg">กรอกข้อมูลเงื่อนไขและเพิ่มสินค้าเพื่อดูผล</div>
+      </div>
+    </div>
+
+    <!-- Action bar -->
+    <div class="action-bar">
+      <button class="btn-save" onclick="saveToSheet()" id="btn_save">💾 บันทึกข้อมูล</button>
+      <button class="btn-line" onclick="copyForLine()">📱 คัดลอกส่ง LINE</button>
+      <button class="btn-success" onclick="exportExcel()">📥 Export Excel</button>
+      <button class="btn-primary" onclick="printApproval()">🖨️ พิมพ์ใบอนุมัติ</button>
+      <button class="btn-outline" onclick="resetAll()">🔄 รีเซ็ต</button>
+      <span class="ts" id="ts"></span>
+    </div>
+
+    <!-- Save status -->
+    <div class="save-status" id="saveStatus"></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// ⚙️  CONFIG — แก้ไขค่านี้ให้ตรงกับ GAS ของคุณ
+// ─────────────────────────────────────────────
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZZU26TV_xXptWKGrBl9HyGwdWOX1JJIaNAECvZLAivcevTdaE8JPMX6IowjksveLE3A/exec';
+// ⬆️ แทน YOUR_GAS_DEPLOYMENT_ID ด้วย Web App URL จาก Google Apps Script
+// ─────────────────────────────────────────────
+
+const FX = { USD:35, JPY:0.25, RMB:5, THB:1, EURO:40 };
+const TERMS = {
+  LCL_Local:{label:'LCL Local',pct:0}, LCL_DDU:{label:'LCL DDU',pct:0.05},
+  LCL_CIF_China:{label:'LCL CIF China',pct:0.25}, LCL_CIF_Bangkok:{label:'LCL CIF Bangkok',pct:0.15},
+  LCL_EXW:{label:'LCL EXW',pct:0.30}, LCL_FOB:{label:'LCL FOB',pct:0.25},
+  LCL_Air_50:{label:'LCL Air 50%',pct:0.50}, LCL_Air_70:{label:'LCL Air 70%',pct:0.70},
+  LCL_Air_100:{label:'LCL Air 100%',pct:1.00},
+  FCL_Local:{label:'FCL Local',pct:0}, FCL_DDU:{label:'FCL DDU',pct:0.03},
+  FCL_CIF_China:{label:'FCL CIF China',pct:0.10}, FCL_CIF_Bangkok:{label:'FCL CIF Bangkok',pct:0.05},
+  FCL_EXW:{label:'FCL EXW',pct:0.15}, FCL_FOB:{label:'FCL FOB',pct:0.08},
+};
+
+let rows = [];
+let nextId = 1;
+
+// ── Toast notification ──
+function showToast(msg, type='success', duration=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => { t.className = 'toast'; }, duration);
+}
+
+// ── Brand toggle ──
+function toggleBrandOther() {
+  const sel = document.getElementById('req_brand');
+  const grp = document.getElementById('brand_other_group');
+  grp.style.display = sel.value === 'OTHER' ? 'block' : 'none';
+  if (sel.value !== 'OTHER') document.getElementById('req_brand_other').value = '';
+}
+
+function getBrand() {
+  const sel = document.getElementById('req_brand').value;
+  if (sel === 'OTHER') return document.getElementById('req_brand_other').value.trim() || 'OTHER';
+  return sel;
+}
+
+// ── Product rows ──
+function addRow() {
+  const id = nextId++;
+  rows.push({ id, code:'', price:'' });
+  renderRows();
+  calc();
+  document.getElementById(`code_${id}`)?.focus();
+}
+
+function removeRow(id) {
+  rows = rows.filter(r => r.id !== id);
+  renderRows();
+  calc();
+}
+
+function renderRows() {
+  const tbody = document.getElementById('prodBody');
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#a0aec0;padding:18px;font-size:13px">ยังไม่มีสินค้า</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map((r, i) => `
+    <tr>
+      <td><span class="row-num">#${i+1}</span></td>
+      <td><input type="text" id="code_${r.id}" value="${r.code}"
+            placeholder="เช่น TR-100"
+            onchange="setRow(${r.id},'code',this.value)"></td>
+      <td><input type="number" id="price_${r.id}" value="${r.price}"
+            placeholder="0.00" step="0.01"
+            oninput="setRow(${r.id},'price',this.value)"></td>
+      <td><button class="btn-icon" onclick="removeRow(${r.id})" title="ลบ">✕</button></td>
+    </tr>`).join('');
+}
+
+function setRow(id, field, val) {
+  const r = rows.find(x => x.id === id);
+  if (r) { r[field] = val; calc(); }
+}
+
+// ── Global getters ──
+function gv(id) { return document.getElementById(id)?.value ?? ''; }
+function gn(id) { const v = parseFloat(gv(id)); return isNaN(v) ? null : v; }
+
+// ── Calculation ──
+function calcOne(foreignPrice) {
+  const currency  = gv('g_currency');
+  const termKey   = gv('g_term');
+  const taxStr    = gv('g_tax');
+  const marginCat = gn('g_marginCat');
+  const marginOv  = gn('g_marginOv');
+  const rebate    = gn('g_rebate') ?? 0;
+  const gm        = gn('g_gm');
+  const adv = gn('g_adv')??0, pre = gn('g_pre')??0;
+  const pro = gn('g_pro')??0, wh  = gn('g_wh')??0, sa = gn('g_sa')??0;
+
+  const fxRate  = FX[currency] ?? null;
+  const termObj = TERMS[termKey] ?? null;
+  const taxPct  = taxStr !== '' ? parseFloat(taxStr) : null;
+  const margin  = marginOv != null ? marginOv : marginCat;
+
+  if (!fxRate || !termObj || taxPct === null || margin === null || gm === null
+      || !foreignPrice || isNaN(foreignPrice)) return null;
+
+  const priceTHB    = foreignPrice * fxRate;
+  const afterTerm   = priceTHB   * (1 + termObj.pct);
+  const afterTax    = afterTerm  * (1 + taxPct);
+  const sellBefore  = afterTax   / (1 - margin);
+  const afterRebate = rebate > 0 ? sellBefore / (1 - rebate) : sellBefore;
+  const finalList   = Math.round(afterRebate / (1 - gm) / 5) * 5;
+  const netPrice    = finalList  * (1 - gm);
+  const gp          = (netPrice - afterTax) / netPrice;
+
+  const advAmt = adv, preAmt = pre, proAmt = pro;
+  const whAmt  = wh,  saAmt  = sa;
+  const totalCostAmt = advAmt+preAmt+proAmt+whAmt+saAmt;
+  const totalCostPct = totalCostAmt / netPrice;
+  const netProfitAmt = netPrice - afterTax - totalCostAmt;
+  const netProfitPct = netProfitAmt / netPrice;
+
+  return { priceTHB, afterTerm, afterTax, margin, sellBefore,
+           afterRebate, finalList, netPrice, gp,
+           advAmt, preAmt, proAmt, whAmt, saAmt,
+           totalCostAmt, totalCostPct, netProfitAmt, netProfitPct,
+           fxRate, termPct: termObj.pct, taxPct, rebate, gm,
+           termLabel: termObj.label };
+}
+
+let lastResults = [];
+
+function calc() {
+  lastResults = rows.map(r => ({
+    r, result: calcOne(parseFloat(r.price))
+  }));
+
+  const valid = lastResults.filter(x => x.result);
+  if (valid.length === 0 || rows.length === 0) {
+    document.getElementById('resultWrap').innerHTML =
+      '<div class="empty-msg">กรอกข้อมูลเงื่อนไขและราคาสินค้าเพื่อดูผล</div>';
+    return;
+  }
+
+  document.getElementById('ts').textContent =
+    'คำนวณล่าสุด: ' + new Date().toLocaleTimeString('th-TH');
+
+  const f = n => n == null||isNaN(n) ? '—'
+    : n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2})+' ฿';
+  const pc = n => n == null||isNaN(n) ? '—' : (n*100).toFixed(2)+'%';
+  const bar = n => {
+    if (n == null||isNaN(n)) return '—';
+    const w = Math.max(0,Math.min(Math.abs(n)*200,100));
+    const col = n < 0 ? '#e53e3e' : n < 0.05 ? '#f6ad55' : '#48bb78';
+    return `<div class="bar-wrap">${(n*100).toFixed(2)}%
+      <span class="mini-bar"><span class="mini-fill" style="width:${w}%;background:${col}"></span></span>
+    </div>`;
+  };
+
+  const cols = lastResults.map((x,i) => {
+    const name = x.r.code || `สินค้า #${i+1}`;
+    return `<th>${name}</th>`;
+  }).join('');
+
+  const row = (label, fn, cls='') =>
+    `<tr class="${cls}"><td class="row-label">${label}</td>` +
+    lastResults.map(x => `<td>${x.result ? fn(x.result, x.r) : '—'}</td>`).join('') +
+    '</tr>';
+
+  const adv = gn('g_adv')??0, pre = gn('g_pre')??0;
+  const pro = gn('g_pro')??0, wh  = gn('g_wh')??0, sa  = gn('g_sa')??0;
+
+  document.getElementById('resultWrap').innerHTML = `
+  <table class="compare">
+    <thead>
+      <tr><th class="row-header">รายการ</th>${cols}</tr>
+    </thead>
+    <tbody>
+      <tr class="sec-row"><td colspan="${rows.length+1}">📦 ต้นทุนสินค้า</td></tr>
+      ${row('ราคาต่างประเทศ',  (r,p)=> f(parseFloat(p.price)))}
+      ${row('FX Rate',         r => r.fxRate+' ฿/'+gv('g_currency'))}
+      ${row('ราคา (THB)',      r => f(r.priceTHB), 'hl')}
+      ${row('Term %',          r => pc(r.termPct))}
+      ${row('After Term Cost', r => f(r.afterTerm))}
+      ${row('Tax %',           r => pc(r.taxPct))}
+      ${row('After Tax Cost',  r => f(r.afterTax), 'hl')}
+      <tr class="sec-row"><td colspan="${rows.length+1}">💲 ราคาขาย</td></tr>
+      ${row('Effective Margin %',      r => pc(r.margin))}
+      ${row('Sell Price Before Rebate',r => f(r.sellBefore))}
+      ${row('Rebate %',                r => pc(r.rebate))}
+      ${row('After Rebate Price',      r => f(r.afterRebate))}
+      ${row('GM Discount %',           r => pc(r.gm))}
+      ${row('🏷️ FINAL LIST PRICE',    r => f(r.finalList), 'final')}
+      ${row('Net Price After Discount',r => f(r.netPrice))}
+      ${row('Gross Profit %',          r => bar(r.gp), 'hl')}
+      <tr class="sec-row"><td colspan="${rows.length+1}">💰 ค่าใช้จ่าย (% of Net Price)</td></tr>
+      ${adv ? row(`Advertise`,    r => f(r.advAmt), 'cost') : ''}
+      ${pre ? row(`Presentor`,    r => f(r.preAmt), 'cost') : ''}
+      ${pro ? row(`Promotion`,    r => f(r.proAmt), 'cost') : ''}
+      ${wh  ? row(`WH-Transport`, r => f(r.whAmt),  'cost') : ''}
+      ${sa  ? row(`Sale & Admin`, r => f(r.saAmt),  'cost') : ''}
+      ${row('Total Cost Amount', r => f(r.totalCostAmt), 'hl')}
+      ${row('Total Cost %',      r => pc(r.totalCostPct), 'hl')}
+      <tr class="sec-row"><td colspan="${rows.length+1}">📈 กำไรสุทธิ</td></tr>
+      <tr class="profit">
+        <td class="row-label">Net Profit Amount</td>
+        ${lastResults.map(x => x.result
+          ? `<td class="${x.result.netProfitAmt<0?'neg':'pos'}">${f(x.result.netProfitAmt)}</td>`
+          : '<td>—</td>').join('')}
+      </tr>
+      <tr class="profit">
+        <td class="row-label">Net Profit Margin %</td>
+        ${lastResults.map(x => x.result
+          ? `<td class="${x.result.netProfitPct<0?'neg':'pos'}">${bar(x.result.netProfitPct)}</td>`
+          : '<td>—</td>').join('')}
+      </tr>
+    </tbody>
+  </table>`;
+}
+
+// ── 💾 Save to Google Sheet ──
+function saveToSheet() {
+  const valid = lastResults.filter(x => x.result);
+  if (valid.length === 0) {
+    showToast('⚠️ ไม่มีผลการคำนวณ กรุณากรอกข้อมูลก่อน', 'error');
+    return;
+  }
+
+  const reqName  = gv('req_name').trim();
+  const reqBrand = getBrand();
+  const reqDept  = gv('req_dept');
+  if (!reqName) {
+    showToast('⚠️ กรุณากรอกชื่อผู้ขอราคา', 'error');
+    document.getElementById('req_name').focus();
+    return;
+  }
+  if (!reqDept) {
+    showToast('⚠️ กรุณาเลือกแผนก', 'error');
+    document.getElementById('req_dept').focus();
+    return;
+  }
+
+  // Check if GAS URL is configured
+  if (GAS_URL.includes('YOUR_GAS_DEPLOYMENT_ID')) {
+    showToast('⚠️ กรุณาตั้งค่า GAS_URL ในโค้ดก่อนใช้งาน', 'error', 5000);
+    return;
+  }
+
+  const btn = document.getElementById('btn_save');
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังบันทึก...';
+
+  const now = new Date();
+  const dateStr = now.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
+  // Generate doc number: PRC-YYYYMM-XXXX (random 4 digits)
+  const yyyy = now.getFullYear();
+  const mm   = String(now.getMonth()+1).padStart(2,'0');
+  const rand = String(Math.floor(1000 + Math.random() * 9000));
+  const docNo = `PRC-${yyyy}${mm}-${rand}`;
+  const pc = n => n == null||isNaN(n) ? 0 : Math.round(n*10000)/100;
+  const f2 = n => n == null||isNaN(n) ? 0 : Math.round(n*100)/100;
+
+  // Build rows for each product
+  const dataRows = valid.map(({r, result:res}) => ({
+    docNo:         docNo,
+    timestamp:     dateStr,
+    requester:     reqName,
+      brand:         reqBrand,
+    department:    reqDept,
+    customer:      gv('req_customer'),
+    itemCode:      r.code || '—',
+    foreignPrice:  parseFloat(r.price) || 0,
+    currency:      gv('g_currency'),
+    fxRate:        res.fxRate,
+    priceTHB:      f2(res.priceTHB),
+    termLabel:     res.termLabel,
+    termPct:       pc(res.termPct),
+    afterTermCost: f2(res.afterTerm),
+    taxPct:        pc(res.taxPct),
+    afterTaxCost:  f2(res.afterTax),
+    marginPct:     pc(res.margin),
+    rebatePct:     pc(res.rebate),
+    gmDiscountPct: pc(res.gm),
+    finalListPrice:res.finalList,
+    netPrice:      f2(res.netPrice),
+    grossProfitPct:pc(res.gp),
+    netProfitAmt:  f2(res.netProfitAmt),
+    netProfitPct:  pc(res.netProfitPct),
+    totalCostAmt:  f2(res.totalCostAmt),
+  }));
+
+  // Send to GAS via JSONP (or fetch with CORS)
+  const payload = { action: 'savePricing', rows: dataRows };
+
+  fetch(GAS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    showToast(`✅ บันทึกสำเร็จ! เลขที่ ${docNo}`, 'success');
+    btn.disabled = false;
+    btn.innerHTML = '💾 บันทึกข้อมูล';
+  })
+  .catch(err => {
+    showToast('❌ บันทึกไม่สำเร็จ: ' + err.message, 'error', 5000);
+    btn.disabled = false;
+    btn.innerHTML = '💾 บันทึกข้อมูล';
+  });
+}
+
+// ── 📱 Copy for LINE ──
+function copyForLine() {
+  const valid = lastResults.filter(x => x.result);
+  if (valid.length === 0) {
+    showToast('⚠️ ไม่มีผลการคำนวณ', 'error');
+    return;
+  }
+
+  const f = n => n == null||isNaN(n) ? '—'
+    : n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const pc = n => n == null||isNaN(n) ? '—' : (n*100).toFixed(1)+'%';
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+
+  const reqName = gv('req_name') || '—';
+  const reqDept = gv('req_dept') || '—';
+  const reqCust = gv('req_customer') || '—';
+
+  let lines = [];
+  const now2 = new Date();
+  const yyyy2 = now2.getFullYear();
+  const mm2   = String(now2.getMonth()+1).padStart(2,'0');
+  const rand2 = String(Math.floor(1000 + Math.random() * 9000));
+  const lineDocNo = `PRC-${yyyy2}${mm2}-${rand2}`;
+  const dateStr2 = now2.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+  lines.push('📋 TTT Price Approval');
+  lines.push('─────────────────────');
+  lines.push(`📄 เลขที่: ${lineDocNo}`);
+  lines.push(`📅 วันที่: ${dateStr2}`);
+  const reqBrand2 = getBrand();
+  lines.push(`👤 ผู้ขอ: ${reqName} (${reqDept})`);
+  if (reqBrand2) lines.push(`🏷️ แบรนด์: ${reqBrand2}`);
+  if (gv('req_customer')) lines.push(`🏢 ลูกค้า: ${reqCust}`);
+  lines.push(`💱 สกุลเงิน: ${gv('g_currency')} | Term: ${TERMS[gv('g_term')]?.label||'—'}`);
+  lines.push(`📊 Tax: ${pc(parseFloat(gv('g_tax')))} | GM: ${pc(parseFloat(gv('g_gm')))}`);
+  lines.push('');
+
+  valid.forEach(({r, result:res}, i) => {
+    const code = r.code || `สินค้า #${i+1}`;
+    lines.push(`📦 ${code}`);
+    lines.push(`  ราคาทุน: ${f(res.afterTax)} ฿`);
+    lines.push(`  🏷️ LIST PRICE: ${f(res.finalList)} ฿`);
+    lines.push(`  Net Price: ${f(res.netPrice)} ฿`);
+    lines.push(`  GP: ${pc(res.gp)} | Net Profit: ${pc(res.netProfitPct)}`);
+    if (i < valid.length-1) lines.push('─────────────────────');
+  });
+
+  lines.push('');
+  lines.push('📱 TTT Pricing Bot — TTT Corporation');
+
+  const text = lines.join('\n');
+
+  // Copy to clipboard
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('✅ คัดลอกแล้ว! วางใน LINE ได้เลย 📱', 'success'))
+      .catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try {
+    document.execCommand('copy');
+    showToast('✅ คัดลอกแล้ว! วางใน LINE ได้เลย 📱', 'success');
+  } catch(e) {
+    showToast('❌ ไม่สามารถคัดลอกได้', 'error');
+  }
+  document.body.removeChild(ta);
+}
+
+// ── Export Excel ──
+function exportExcel() {
+  const valid = lastResults.filter(x => x.result);
+  if (valid.length === 0) { alert('ไม่มีผลการคำนวณ'); return; }
+  const now = new Date();
+  const dateStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+  const docNo = `PRC-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const wb = XLSX.utils.book_new();
+  const f = n => n;
+  const adv=gn('g_adv')??0, pre=gn('g_pre')??0, pro=gn('g_pro')??0,
+        wh=gn('g_wh')??0,   sa=gn('g_sa')??0;
+
+  const hdr = ['รายการ', ...lastResults.map((x,i)=> x.r.code||`สินค้า #${i+1}`)];
+  const r = (label, fn) => [label, ...lastResults.map(x => x.result ? fn(x.result,x.r) : '')];
+
+  const data = [
+    ['TTT Pricing Bot — None PL Price Approval'],
+    [`Doc: ${docNo} | Date: ${dateStr}`],
+    [`ผู้ขอ: ${gv('req_name')} (${gv('req_dept')}) | ลูกค้า: ${gv('req_customer')}`],
+    [],
+    ['เงื่อนไขร่วม'],
+    ['สกุลเงิน', gv('g_currency')],
+    ['Price Term', TERMS[gv('g_term')]?.label||''],
+    ['Import Tax %', gv('g_tax')],
+    ['Effective Margin %', gv('g_marginOv')||gv('g_marginCat')],
+    ['Rebate %', gv('g_rebate')],
+    ['GM Discount %', gv('g_gm')],
+    ['Advertise ฿', adv], ['Presentor ฿', pre], ['Promotion ฿', pro],
+    ['WH-Transport ฿', wh], ['Sale & Admin ฿', sa],
+    [],
+    hdr,
+    r('ราคาต่างประเทศ',   (_,p)=> parseFloat(p.price)||0),
+    r('ราคา (THB)',        x=> x.priceTHB),
+    r('After Term Cost',   x=> x.afterTerm),
+    r('After Tax Cost',    x=> x.afterTax),
+    r('Sell Price Before Rebate', x=> x.sellBefore),
+    r('After Rebate Price',x=> x.afterRebate),
+    r('FINAL LIST PRICE',  x=> x.finalList),
+    r('Net Price After Discount', x=> x.netPrice),
+    r('Gross Profit %',    x=> x.gp),
+    r('Net Profit Amount', x=> x.netProfitAmt),
+    r('Net Profit Margin %',x=>x.netProfitPct),
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wch:28}, ...lastResults.map(()=>({wch:18}))];
+  XLSX.utils.book_append_sheet(wb, ws, 'Pricing Summary');
+
+  const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  XLSX.writeFile(wb, `TTT_Pricing_${ts}.xlsx`);
+}
+
+// ── Print ──
+function printApproval() {
+  const valid = lastResults.filter(x => x.result);
+  if (valid.length === 0) { alert('กรุณาคำนวณราคาก่อน'); return; }
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2,'0');
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const yyyy = now.getFullYear();
+  const dateStr = `${dd}/${mm}/${yyyy}`;
+  const docNo = `PRC-${yyyy}${mm}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+  const f2 = n => n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const f  = n => f2(n);
+  const pc = n => (n*100).toFixed(1)+'%';
+  const adv=gn('g_adv')??0, pre=gn('g_pre')??0, pro=gn('g_pro')??0,
+        wh=gn('g_wh')??0,   sa=gn('g_sa')??0;
+
+  const pages = valid.map(({r, result:res}) => {
+    const net     = res.netPrice;
+    const costPct = res.afterTax / net;
+    const npCol   = res.netProfitPct < 0 ? '#c0392b' : '#1a7a4a';
+    const costItems = [
+      ['Advertise',    res.advAmt],
+      ['Presentor',    res.preAmt],
+      ['Promotion',    res.proAmt],
+      ['WH-Transport', res.whAmt ],
+      ['Sale & Admin', res.saAmt ],
+    ].filter(([,a])=>a>0);
+
+    const segs = [
+      { label:'ราคาทุน',     pct: costPct,              color:'#2563eb' },
+      ...(res.advAmt>0?[{label:'Advertise',   pct:res.advAmt/net, color:'#f59e0b'}]:[]),
+      ...(res.preAmt>0?[{label:'Presentor',   pct:res.preAmt/net, color:'#8b5cf6'}]:[]),
+      ...(res.proAmt>0?[{label:'Promotion',   pct:res.proAmt/net, color:'#ec4899'}]:[]),
+      ...(res.whAmt >0?[{label:'WH-Transport',pct:res.whAmt/net,  color:'#0891b2'}]:[]),
+      ...(res.saAmt >0?[{label:'Sale & Admin',pct:res.saAmt/net,  color:'#6366f1'}]:[]),
+      { label:'Net Profit', pct: Math.max(res.netProfitPct,0), color: npCol },
+    ];
+    const tot = segs.reduce((s,x)=>s+x.pct,0);
+    const barSegs = segs.map(s=>({...s, w:(s.pct/Math.max(tot,1)*100).toFixed(2)}));
+
+    // ── compact helpers ──
+    const S  = (p,l,formula,val,hiColor='') => `
+      <tr>
+        <td style="padding:2px 6px;color:#9ca3af;font-size:9px;text-align:center;width:18px">${p}</td>
+        <td style="padding:3px 7px;font-size:9.5px;font-weight:600;color:${hiColor||'#111'}">${l}</td>
+        <td style="padding:3px 7px;font-size:9px;color:#6b7280;font-style:italic">${formula}</td>
+        <td style="padding:3px 9px;text-align:right;font-weight:700;font-size:${hiColor?'11':'9.5'}px;color:${hiColor||'#111'};white-space:nowrap">${val}</td>
+      </tr>`;
+    const ARR = () => `<tr><td colspan="4" style="padding:0 7px 0 20px;color:#d1d5db;font-size:11px;line-height:1">↓</td></tr>`;
+    const HDR = (lbl,bg='#dbeafe',col='#1e40af') => `
+      <tr><td colspan="4" style="background:${bg};padding:3px 10px;font-size:9px;font-weight:700;color:${col};text-transform:uppercase;letter-spacing:.05em">${lbl}</td></tr>`;
+
+    return `
+<div class="page">
+
+  <!-- ── Letterhead ── -->
+  <table style="width:100%;margin-bottom:6px;border-bottom:2px solid #1a365d;padding-bottom:5px">
+    <tr>
+      <td>
+        <div style="font-size:15px;font-weight:900;color:#1a365d;line-height:1.1">TTT Corporation Co., Ltd.</div>
+        <div style="font-size:8.5px;color:#666;margin-top:1px">Hydraulic Hose, Fittings & Industrial Equipment</div>
+      </td>
+      <td style="text-align:right;vertical-align:top">
+        <div style="font-size:12px;font-weight:900;color:#1a365d;letter-spacing:.5px">ใบขออนุมัติราคาขาย</div>
+        <div style="font-size:8px;color:#888">Price Approval Request</div>
+        <div style="font-size:8.5px;color:#444;margin-top:2px">
+          เลขที่: <b>${docNo}</b> &nbsp; วันที่: <b>${dateStr}</b>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- ── Info bar ── -->
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:5px;padding:5px 10px;margin-bottom:7px;font-size:9px;line-height:1.7">
+    <table style="width:100%"><tr>
+      <td><b>รหัสสินค้า:</b> ${r.code||'—'}</td>
+      <td><b>ราคาต่างประเทศ:</b> ${f(parseFloat(r.price))} ${gv('g_currency')}</td>
+      <td><b>FX Rate:</b> 1 ${gv('g_currency')} = ${res.fxRate} ฿</td>
+    </tr><tr>
+      <td><b>Term:</b> ${res.termLabel} (+${pc(res.termPct)})</td>
+      <td><b>Tax:</b> ${pc(res.taxPct)} &nbsp; <b>Margin:</b> ${pc(res.margin)}</td>
+      <td><b>GM Discount:</b> ${pc(res.gm)} &nbsp; <b>Rebate:</b> ${pc(res.rebate)}</td>
+    </tr><tr>
+      <td><b>ผู้ขอ:</b> ${gv('req_name')||'—'} (${gv('req_dept')||'—'}) &nbsp; <b>แบรนด์:</b> ${getBrand()||'—'}</td>
+      <td colspan="2">${gv('req_customer') ? `<b>ลูกค้า:</b> ${gv('req_customer')}` : ''}</td>
+    </tr></table>
+  </div>
+
+  <!-- ── Main content: 2 columns ── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:7px">
+
+    <!-- LEFT: Calculation waterfall -->
+    <div>
+      <div style="font-size:8.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">การคำนวณราคาขาย</div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;font-size:9px">
+        <thead>
+          <tr style="background:#1e3a5f;color:#fff">
+            <th style="padding:3px 6px;width:18px;font-size:8px">#</th>
+            <th style="padding:3px 7px;text-align:left;font-size:8.5px">รายการ</th>
+            <th style="padding:3px 7px;text-align:left;font-size:8.5px">สูตร</th>
+            <th style="padding:3px 9px;text-align:right;font-size:8.5px">ราคา (฿)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${HDR('ต้นทุน')}
+          ${S(1,'ราคาต่างประเทศ',`${f(parseFloat(r.price))} ${gv('g_currency')} × ${res.fxRate}`,f(res.priceTHB)+' ฿')}
+          ${ARR()}
+          ${S(2,'After Term Cost',`× (1 + ${pc(res.termPct)})`,f(res.afterTerm)+' ฿')}
+          ${ARR()}
+          ${S(3,'After Tax Cost (ราคาทุน)',`× (1 + ${pc(res.taxPct)})`,f(res.afterTax)+' ฿','#2563eb')}
+          ${HDR('ราคาขาย','#dcfce7','#166534')}
+          ${ARR()}
+          ${S(4,'Sell Price Before Rebate',`÷ (1 − ${pc(res.margin)})`,f(res.sellBefore)+' ฿')}
+          ${ARR()}
+          ${S(5,'After Rebate Price',res.rebate>0?`÷ (1 − ${pc(res.rebate)})`:'ไม่มี Rebate',f(res.afterRebate)+' ฿')}
+          ${ARR()}
+          <tr style="background:#f0fdf4;border-top:1.5px solid #22c55e;border-bottom:1.5px solid #22c55e">
+            <td style="padding:5px 6px;color:#166534;font-size:13px;font-weight:900;text-align:center">★</td>
+            <td style="padding:5px 7px;font-size:10.5px;font-weight:900;color:#166534" colspan="2">FINAL LIST PRICE<br><span style="font-size:8px;color:#6b7280;font-weight:400">÷ (1 − Discount ${pc(res.gm)})</span></td>
+            <td style="padding:5px 9px;text-align:right;font-size:15px;font-weight:900;color:#166534;white-space:nowrap">${f(res.finalList)} ฿</td>
+          </tr>
+          ${ARR()}
+          <tr style="background:#f0fdf4">
+            <td style="padding:3px 6px;color:#166534;font-size:9px;text-align:center">6</td>
+            <td style="padding:3px 7px;font-weight:700;color:#166534;font-size:9.5px" colspan="2">Net Selling Price<br><span style="font-size:8px;color:#6b7280;font-weight:400">List × (1 − ${pc(res.gm)})</span></td>
+            <td style="padding:3px 9px;text-align:right;font-weight:800;color:#166534;font-size:11px;white-space:nowrap">${f(net)} ฿</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- RIGHT: Summary -->
+    <div style="display:flex;flex-direction:column;gap:6px">
+
+      <!-- Gross Profit -->
+      <div style="border:1px solid #bfdbfe;border-radius:5px;padding:7px 10px;background:#eff6ff">
+        <div style="font-size:8.5px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">กำไรขั้นต้น (GROSS PROFIT)</div>
+        <table style="width:100%;font-size:9px;border-collapse:collapse">
+          <tr><td style="padding:2px 0;color:#374151">Net Price</td><td style="text-align:right;font-weight:600">${f(net)} ฿</td></tr>
+          <tr><td style="padding:2px 0;color:#374151">− ราคาทุน</td><td style="text-align:right;font-weight:600">− ${f(res.afterTax)} ฿</td></tr>
+          <tr style="border-top:1px solid #bfdbfe">
+            <td style="padding:3px 0;font-weight:700;color:#2563eb">Gross Profit</td>
+            <td style="text-align:right;font-weight:800;color:#2563eb;font-size:11px">${f(net-res.afterTax)} ฿</td>
+          </tr>
+          <tr><td colspan="2" style="text-align:right;color:#2563eb;font-size:9px;font-weight:700">${pc(res.gp)} of Net Price</td></tr>
+        </table>
+      </div>
+
+      <!-- Expenses -->
+      <div style="border:1px solid #fde68a;border-radius:5px;padding:7px 10px;background:#fefce8">
+        <div style="font-size:8.5px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">ค่าใช้จ่าย</div>
+        <table style="width:100%;font-size:9px;border-collapse:collapse">
+          ${costItems.length
+            ? costItems.map(([l,a])=>`<tr><td style="padding:2px 0;color:#374151">− ${l}</td><td style="text-align:right">− ${f(a)} ฿</td></tr>`).join('')
+            : '<tr><td colspan="2" style="color:#9ca3af;font-style:italic;padding:2px 0">ไม่มีค่าใช้จ่ายเพิ่มเติม</td></tr>'}
+          <tr style="border-top:1px solid #fde68a">
+            <td style="padding:3px 0;font-weight:700;color:#92400e">รวมค่าใช้จ่าย</td>
+            <td style="text-align:right;font-weight:800;color:#92400e;font-size:11px">− ${f(res.totalCostAmt)} ฿</td>
+          </tr>
+          <tr><td colspan="2" style="text-align:right;color:#92400e;font-size:9px;font-weight:700">${pc(res.totalCostPct)} of Net Price</td></tr>
+        </table>
+      </div>
+
+      <!-- Net Profit highlight -->
+      <div style="border:2px solid ${npCol};border-radius:5px;padding:8px 12px;background:${res.netProfitPct<0?'#fef2f2':'#f0fff4'};display:flex;justify-content:space-between;align-items:center;flex:1">
+        <div>
+          <div style="font-size:10px;font-weight:900;color:${npCol}">NET PROFIT MARGIN</div>
+          <div style="font-size:8px;color:#6b7280;margin-top:2px">= Gross Profit − ค่าใช้จ่ายทั้งหมด</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:900;color:${npCol}">${pc(res.netProfitPct)}</div>
+          <div style="font-size:10px;color:${npCol};font-weight:700">${f(res.netProfitAmt)} ฿</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Stacked bar ── -->
+  <div style="margin-bottom:8px">
+    <div style="font-size:8.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">โครงสร้างราคาขายสุทธิ (%)</div>
+    <div style="display:flex;height:16px;border-radius:3px;overflow:hidden">
+      ${barSegs.map(s=>`<div style="width:${s.w}%;background:${s.color};display:flex;align-items:center;justify-content:center;font-size:7px;color:#fff;font-weight:700;overflow:hidden">${parseFloat(s.w)>8?pc(s.pct):''}</div>`).join('')}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:3px">
+      ${barSegs.map(s=>`<span style="font-size:8.5px;color:#374151;display:flex;align-items:center;gap:2px"><span style="width:8px;height:8px;background:${s.color};border-radius:2px;display:inline-block"></span>${s.label} ${pc(s.pct)}</span>`).join('')}
+    </div>
+  </div>
+
+  <!-- ── Signatures ── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;padding-top:8px;border-top:1px solid #e2e8f0">
+    ${[['ผู้จัดทำ','Prepared by', gv('req_name')||''],
+       ['ผู้ตรวจสอบ','Reviewed by (Finance)',''],
+       ['ผู้อนุมัติ','Approved by','']].map(([th,en,nm])=>`
+    <div style="text-align:center">
+      <div style="height:26px"></div>
+      <div style="border-top:1px solid #374151;padding-top:5px">
+        <div style="font-size:9px;font-weight:700">${nm||'....................................................'}</div>
+        <div style="font-size:8.5px;color:#374151;margin-top:2px">${th} / ${en}</div>
+        <div style="font-size:8px;color:#9ca3af;margin-top:1px">วันที่ / Date : ___________</div>
+      </div>
+    </div>`).join('')}
+  </div>
+
+</div>`;
+  }).join('');
+
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      @media print {
+        @page { size: A4 portrait; margin: 0; }
+        body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .page { page-break-after: always; }
+      }
+      body { background: #fff; font-family: 'Segoe UI', Arial, sans-serif; }
+      .page {
+        width: 210mm;
+        min-height: 297mm;
+        padding: 10mm 12mm 8mm;
+        font-size: 9.5px;
+        color: #111;
+        position: relative;
+      }
+      /* scale everything down if needed */
+      @media screen {
+        body { background: #e0e0e0; display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 20px; }
+        .page { box-shadow: 0 2px 16px rgba(0,0,0,0.2); background: #fff; }
+      }
+    </style>
+  </head><body>${pages}</body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
+}
+
+function resetAll() {
+  if (!confirm('รีเซ็ตทั้งหมด?')) return;
+  rows = []; nextId = 1;
+  ['g_currency','g_term','g_tax','g_marginCat','g_gm','req_dept'].forEach(id => document.getElementById(id).value='');
+  ['g_marginOv','req_name','req_customer','req_brand_other'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('req_brand').value='';
+  document.getElementById('brand_other_group').style.display='none';
+  ['g_adv','g_pre','g_pro','g_wh','g_sa'].forEach(id => document.getElementById(id).value='0');
+  document.getElementById('g_rebate').value='0';
+  renderRows(); calc();
+}
+
+// ── Init ──
+renderRows();
+addRow();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     GAS CODE (วาง Code นี้ใน Google Apps Script)
+     ═══════════════════════════════════════════════════════════
+
+const SHEET_ID = 'YOUR_SPREADSHEET_ID';  // ← แทนด้วย ID ของ Google Sheet
+const SHEET_NAME = 'PricingLog';
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    if (data.action === 'savePricing') {
+      const ss = SpreadsheetApp.openById(SHEET_ID);
+      let sheet = ss.getSheetByName(SHEET_NAME);
+      if (!sheet) {
+        sheet = ss.insertSheet(SHEET_NAME);
+        // Add headers
+        sheet.appendRow([
+          'Timestamp','ผู้ขอ','แผนก','ลูกค้า','รหัสสินค้า',
+          'ราคาต่างประเทศ','สกุลเงิน','FX Rate','ราคา(THB)',
+          'Term','Term%','After Term','Tax%','After Tax',
+          'Margin%','Rebate%','GM%',
+          'List Price','Net Price','GP%',
+          'Net Profit Amt','Net Profit%','Total Cost Amt'
+        ]);
+        sheet.setFrozenRows(1);
+      }
+      data.rows.forEach(row => {
+        sheet.appendRow([
+          row.timestamp, row.requester, row.department, row.customer,
+          row.itemCode, row.foreignPrice, row.currency, row.fxRate, row.priceTHB,
+          row.termLabel, row.termPct, row.afterTermCost, row.taxPct, row.afterTaxCost,
+          row.marginPct, row.rebatePct, row.gmDiscountPct,
+          row.finalListPrice, row.netPrice, row.grossProfitPct,
+          row.netProfitAmt, row.netProfitPct, row.totalCostAmt
+        ]);
+      });
+      return ContentService
+        .createTextOutput(JSON.stringify({status:'ok', saved: data.rows.length}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({status:'error', message: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput('TTT Pricing API OK');
+}
+
+═══════════════════════════════════════════════════════════ -->
+</body>
+</html>
